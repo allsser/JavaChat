@@ -57,14 +57,14 @@ public class ChatClient extends JFrame{
 	  bt_change.setBounds(400,370,120,30); 
 	  bt_exit.setBounds(400,410,120,30); 
 	  
-	  ButtonGroup group = new ButtonGroup();
-	  group.add(radio1);
-	  group.add(radio2);
-	  
 	  radio1.setText("귓속말");
       radio1.setBounds(new Rectangle(400, 290, 120, 30));
       radio2.setText("귓속말해제");
       radio2.setBounds(new Rectangle(400, 330, 120, 30));
+      
+      ButtonGroup group = new ButtonGroup();
+      group.add(radio1);
+      group.add(radio2);
       
 
 	  p.setLayout(null);

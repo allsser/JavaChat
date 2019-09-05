@@ -30,8 +30,8 @@ public class ChatClient extends JFrame{
    JScrollPane sp_ta,sp_list;   	
    JList<String> li_inwon;
    JButton bt_change,bt_exit; 
-   JRadioButton radio1 = new JRadioButton();
-   JRadioButton radio2 = new JRadioButton();
+   private JRadioButton radio1 = new JRadioButton();
+   private JRadioButton radio2 = new JRadioButton();
   
    JPanel p;	
    public ChatClient() {
@@ -57,14 +57,14 @@ public class ChatClient extends JFrame{
 	  bt_change.setBounds(400,370,120,30); 
 	  bt_exit.setBounds(400,410,120,30); 
 	  
-	  ButtonGroup group = new ButtonGroup();
-	  group.add(radio1);
-	  group.add(radio2);
-	  
 	  radio1.setText("귓속말");
       radio1.setBounds(new Rectangle(400, 290, 120, 30));
       radio2.setText("귓속말해제");
       radio2.setBounds(new Rectangle(400, 330, 120, 30));
+      
+      ButtonGroup group = new ButtonGroup();
+      group.add(radio1);
+      group.add(radio2);
       
 
 	  p.setLayout(null);
@@ -75,8 +75,8 @@ public class ChatClient extends JFrame{
 	  p.add(sp_list);
 	  p.add(bt_change);
 	  p.add(bt_exit);
-	  this.p.add(radio1);
-	  this.p.add(radio2);
+	  p.add(radio1);
+	  p.add(radio2);
 
 	  add(p);
 	  setBounds(300,200,550,500);

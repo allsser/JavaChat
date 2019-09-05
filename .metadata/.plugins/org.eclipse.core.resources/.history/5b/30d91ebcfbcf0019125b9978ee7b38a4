@@ -60,6 +60,8 @@ public class ChatClient extends JFrame{
 	  ButtonGroup group = new ButtonGroup();
 	  group.add(radio1);
 	  group.add(radio2);
+	  this.add(radio1);
+	  this.add(radio2);
 	  
 	  radio1.setText("귓속말");
       radio1.setBounds(new Rectangle(400, 290, 120, 30));
@@ -75,8 +77,8 @@ public class ChatClient extends JFrame{
 	  p.add(sp_list);
 	  p.add(bt_change);
 	  p.add(bt_exit);
-	  this.p.add(radio1);
-	  this.p.add(radio2);
+//	  p.add(radio1);
+//	  p.add(radio2);
 
 	  add(p);
 	  setBounds(300,200,550,500);

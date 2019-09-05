@@ -1,6 +1,5 @@
 package JavaChatGood;
 
-import java.awt.List;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -9,15 +8,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Vector;
 
-import javax.swing.JButton;
-
 public class Server implements Runnable{
     //Server클래스: 소켓을 통한 접속서비스, 접속클라이언트 관리
 	Vector<Service> allV;//모든 사용자(대기실사용자 + 대화방사용자)
 	Vector<Service> waitV;//대기실 사용자	   
 	Vector<Room> roomV;//개설된 대화방 Room-vs(Vector) : 대화방사용자
-	
-	ChatClient cc;
 
 	public Server() {
 		allV = new Vector<>();
@@ -67,7 +62,7 @@ public class Server implements Runnable{
 
 		   Socket s;
 		   String nickName;
-		   
+
 		   public Service(Socket s, Server server) { 
 			   allV=server.allV;
 			   waitV=server.waitV;
@@ -183,15 +178,21 @@ public class Server implements Runnable{
 				    	          messageWait("160|"+ getRoomInfo());
 				    	          break;
 				      
+				      case "500": // 귓속말
+				    	  messageRoom("400|["+nickName +"]▶ "+msgs[1]);
+				    	  String name = msg.substring(2, msg.indexOf('-')).trim();
+				    	  messageWait("180|"+ getWaitInwon());
+                                 if(name.equals(getWaitInwon())) {
+                                	 messageRoom(("500|["+nickName +"]▶ >(secret)" +msgs[1]));
+                                 }
+                          
+				    	  break;
 				    	  
 				      case "800": // 아이디 변경
 				    	  messageRoom("800|"+nickName);
 				    	  messageRoom("175|"+getRoomInwon());
 				    	  messageTo("170|"+getRoomInwon(msgs[1]));
-				    	  break;
-				    	  
-				      case "500": // 귓속말
-				    	  messageRoom("500| |"+getRoomInwon());
+                          
 				    	  break;
 				    }//서버 switch
 				  }//if

@@ -140,7 +140,6 @@ public class MainChat extends JFrame implements ActionListener, Runnable{
 		 sendMsg("160|"+title);
 		 cc.setTitle("채팅방-["+title+"]");
 		 sendMsg("175|");//대화방내 인원정보 요청	 
-		 
 
 		 setVisible(false);
 		 cc.setVisible(true); //대화방이동
@@ -161,13 +160,13 @@ public class MainChat extends JFrame implements ActionListener, Runnable{
 		 else if(ob==cc.sendTF){//(TextField입력)메시지 보내기 요청
 			 String msg = cc.sendTF.getText();
 			 
-			 if(msg.length()>0){
+			 if(cc.radio1.isSelected()) {
+				 sendMsg("500|");
+			 }
+			 else if(msg.length()>0){
 				 sendMsg("300|"+msg); 
 				 cc.sendTF.setText("");
 			 } 
-		else if(cc.radio1.isSelected()) {
-				 sendMsg("500|");
-			 }
 			 }
 		 else if(ob==bt_exit){//나가기(프로그램종료) 요청
 			 System.exit(0);//현재 응용프로그램 종료하기

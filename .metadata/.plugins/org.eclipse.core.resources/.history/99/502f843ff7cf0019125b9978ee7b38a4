@@ -9,7 +9,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Vector;
 
-import javax.swing.JButton;
+import javax.swing.JRadioButton;
 
 public class Server implements Runnable{
     //Server클래스: 소켓을 통한 접속서비스, 접속클라이언트 관리
@@ -191,7 +191,8 @@ public class Server implements Runnable{
 				    	  break;
 				    	  
 				      case "500": // 귓속말
-				    	  messageRoom("500| |"+getRoomInwon());
+				    	  messageRoom("500|"+getRoomInwon());
+				    	  
 				    	  break;
 				    }//서버 switch
 				  }//if
