@@ -1,0 +1,39 @@
+package JavaChat;
+
+import java.io.BufferedReader;
+import java.net.Socket;
+
+import javax.swing.DefaultListModel;
+import javax.swing.JList;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+
+public class ChatClientThread extends Thread {
+	private Socket sock = null;
+	private BufferedReader br = null;
+	private JTextArea ta;
+	private DefaultListModel listModel = null;
+	private JList li3;
+	private String line;
+	private JTextField tf2;
+	
+	public ChatClientThread(Socket sock, BufferedReader br, JTextArea ta, DefaultListModel listModel, JList li3, JTextField tf2) {
+		this.sock = sock;
+		this.br = br;
+		this.ta= ta;
+		this.listModel = listModel;
+		this.tf2 = tf2;
+	}
+	
+	public void run () {
+		try {
+			while ((line = br.readLine()) != null ) {
+				if(line.indexOf("/list/") == 0) {
+					// 첫 글자가 리스트이면
+					IdList();
+				} 
+			}
+		}
+	}
+
+}

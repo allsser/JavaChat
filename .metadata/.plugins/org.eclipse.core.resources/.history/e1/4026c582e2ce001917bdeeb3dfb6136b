@@ -1,0 +1,61 @@
+package JavaChat;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import org.xml.sax.InputSource;
+
+public class ChatThread extends Thread {
+
+	private String id;
+	private BufferedReader br;
+	private PrintWriter pw;
+	private Socket socket;
+	private HashMap hm;
+	private static ArrayList v = new ArrayList();
+	private String str = "";
+
+	public ChatThread(Socket socket, HashMap hm) {
+		this.socket = socket;
+		this.hm = hm;
+		
+		try {
+			// 입력스트림 소켓에서 읽어오기
+			br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			// 소켓에 쓰기
+			PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
+			// 한줄을 읽어ID에 넣지만 생성자 안에 있기 때문에 처음 들어온 문자를 아이디로 인식
+			// 다음 부터는 챗팅글로 인식
+			
+			id = br.readLine(); // --> 클라이언트로 부터 아이디를 받는다.
+			System.out.println(id+"님이 대화방에 들어왔습니다.");
+			
+			// broadcast는 매소드 인자값 String 값 받음... 둘 다 스트링 값
+			broadcast(id+"님이 대화방에 들어왔습니다.");
+			
+			System.out.println("접속자 정보"+socket+"-id:"+id);
+			
+			synchronized (hm) {
+				hm.put(id, pw); // 해쉬맵에 저장해 보자
+			}
+			
+			v.add(id); // 아이디들을 벡터에 저장
+			int n=v.size();
+			for(int i=0;i<n; i++) { // 벡터에 저장되어 있는 아이디들을 for문으로 돌린다.
+				str += v.get(i)+"/"; // 뒤에 /를 붙여 아이디와 아이디간에 구별
+			}
+		}
+	}
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

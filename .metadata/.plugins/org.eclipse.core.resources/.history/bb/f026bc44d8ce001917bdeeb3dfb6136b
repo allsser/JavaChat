@@ -1,0 +1,25 @@
+package JavaChat;
+
+import java.io.BufferedReader;
+import java.io.PrintWriter;
+
+public class ChatThread extends Thread {
+
+	private String id;
+	private BufferedReader br;
+	private PrintWriter pw;
+	private Socket socket;
+	private HashMap hm;
+	private static ArrayList v = new ArrayList();
+	private String str = "";
+
+	public ChatThread(Socket socket, HashMap hm) {
+		this.socket = socket;
+		this.hm = hm;
+	}
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

@@ -1,0 +1,91 @@
+package JavaChat;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.net.Socket;
+import java.util.StringTokenizer;
+
+import javax.swing.DefaultListModel;
+import javax.swing.JList;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+
+public class ChatClientThread extends Thread {
+	private Socket sock = null;
+	private BufferedReader br = null;
+	private JTextArea ta;
+	private DefaultListModel<String> listModel = null;
+	private JList<?> li3;
+	private String line;
+	private JTextField tf2;
+	
+	public ChatClientThread(Socket sock, BufferedReader br, JTextArea ta, DefaultListModel<String> listModel, JList<?> li3, JTextField tf2) {
+		this.sock = sock;
+		this.br = br;
+		this.ta= ta;
+		this.listModel = listModel;
+		this.tf2 = tf2;
+	}
+	
+	public void run () {
+		try {
+			while ((line = br.readLine()) != null ) {
+				if(line.indexOf("/list/") == 0) {
+					// 첫 글자가 리스트이면
+					IdList();
+				} 
+				else if(line.indexOf("/quit/") == 0) {
+					System.out.println("강퇴되셨습니다.");
+					System.exit(0);
+					break;
+				}
+				else if(line.indexOf("/relist/") == 0) {
+					listModel.removeAllElements();
+					IdList();
+				}
+				else if(line.indexOf("/count/") == 0) {
+					int nStart = 0;
+					nStart = line.indexOf(" ");
+					String strList = line.substring(nStart+1);
+					tf2.setText(strList);
+				}
+				else {
+					ta.append(line+"\n"); // 서버로부터 받은 글을 채팅창에 뿌려준다.
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if(br != null) {
+					br.close();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			try {
+				if(sock != null) {
+					sock.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	private void IdList() {
+		int nStart = 0;
+		nStart = line.indexOf(" ");
+		String strList = line.substring(nStart+1);
+		StringTokenizer stok = new StringTokenizer(strList,"/"); //잘라서
+		String strIdList = null;
+		while (stok.hasMoreTokens()) { // 다음 토큰이 없을때 까지
+			strIdList = stok.nextToken(); // 토큰을 저장
+			
+			if(!listModel.contains(strIdList)) { // 포함되어 있지 않다면
+				listModel.addElement(strIdList); // 리스트에 붙여줌
+			}
+			System.out.println("서버로부터 받은 대기자 아이디 명단==>" + strIdList);
+		}
+	}
+}

@@ -1,0 +1,265 @@
+package JavaChat;
+
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+
+import javax.swing.ButtonGroup;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+
+public class ChatClient extends JFrame implements ActionListener,ItemListener,ListSelectionListener {
+
+	private BorderLayout bl = new BorderLayout(5,5);
+	private JLabel lb = new JLabel("대화명:",JLabel.RIGHT);
+	private JTextField tf = new JTextField();
+	private JButton bt = new JButton("접속");
+	private JTextArea ta = new JTextArea();
+	private JLabel lb1 = new JLabel("대 화:",JLabel.RIGHT);
+	private JTextField tf1 = new JTextField();
+	private JButton bt1 = new JButton("보내기");
+
+	private JLabel lb2 = new JLabel("총인원:",JLabel.RIGHT);
+	private JTextField tf2 = new JTextField("0",2);
+	private JLabel lb2_1 = new JLabel("명:",JLabel.LEFT);
+	private JButton bt2 = new JButton("종료");
+	private JLabel lb3 = new JLabel("접속자 리스트");
+
+	private DefaultListModel listModel = new DefaultListModel();
+	// 디폴트 리스트 모델을 제이리스트에 넣어
+	
+	private JList li3 = new JList(listModel);
+	private JScrollPane jsp1 = new JScrollPane(li3);
+	private ButtonGroup cg3 = new ButtonGroup();// 그룹으로 묶어줘야만 가능
+	private JRadioButton cb3 = new JRadioButton("귓속말 해제", true);
+	private JRadioButton cb3_1 = new JRadioButton("귓속말 설정", false);
+	private JButton bt3 = new JButton("방장권한");
+	private JButton bt4 = new JButton("강퇴");
+	private JScrollPane jsp = new JScrollPane(ta);
+	// 대화창 텍스트에어리어의 스크롤패인
+	
+	private ArrayList arl = new ArrayList();
+	
+	private Socket sock = null;
+	private PrintWriter pw = null;
+	private BufferedReader br = null;
+	private String ip = null;
+	private String coercion = null; // 강제 퇴장당할 아이디
+	private String msg = null; // 텍스트필드에 친 것
+	// Constructor
+	
+	public ChatClient(String ip) {
+		super("연습입니다.");
+		init();
+		setSize(500,400);
+		setVisible(true);
+		this.ip = ip;
+		// 메인 채팅창 종료
+		this.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent we) {
+					pw.println("/quit");
+					pw.flush();
+					
+					try {
+						br.close();
+						pw.close();
+						sock.close();
+					}catch (Exception e) {
+						e.printStackTrace();
+					} finally {
+						System.out.println("종료합니다.");
+						System.exit(0);
+					}
+				}
+		});
+	}
+	
+	// Method
+	private void init() {
+		Container con = this.getContentPane();
+		con.setLayout(bl);
+		JPanel p = new JPanel(new BorderLayout(2,2));
+		JPanel p1 = new JPanel(new BorderLayout());
+		p1.add("West",lb);
+		p1.add("Center",tf);
+		p1.add("East",bt);
+		p.add("North",p1);
+		jsp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		// 스크롤바를 머디칼 형식으로 달아줌
+		p.add("Center",jsp);
+		
+		JPanel p2 = new JPanel(new BorderLayout());
+		p2.add("West",lb1);
+		p2.add("Center",tf1);
+		p2.add("East",bt1);
+		p.add("North",p2);
+		add("Center",p);
+		
+		JPanel p3 = new JPanel(new BorderLayout(2,2));
+		JPanel p4 = new JPanel(new FlowLayout());
+		p4.add(lb2);
+		p4.add(tf2);
+		p4.add(lb2_1);
+		p3.add("North",p4);
+		JPanel p6 = new JPanel(new BorderLayout());
+		p6.add("North",lb3);
+		jsp1.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		p6.add("Center",jsp1);
+		JPanel p7 = new JPanel(new GridLayout(3,1));
+		p7.add(cb3);
+		p7.add(cb3_1);
+		p7.add(bt4);
+		p7.add(bt3);
+		
+		p6.add("South",p7);
+		p3.add("Center",p6);
+		JPanel p5 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		p5.add(bt2);
+		p3.add("South",p5);
+		add("East",p3);
+		cg3.add(cb3);
+		cg3.add(cb3_1);
+		ta.setEditable(false);// 채팅창에 글씨 못쓰게
+		tf2.setEditable(false);
+		
+		bt1.addActionListener(this);
+		tf1.addActionListener(this);
+		bt.addActionListener(this);
+		bt2.addActionListener(this);
+		bt3.addActionListener(this);
+		bt4.addActionListener(this);
+		li3.addListSelectionListener(this);
+		cb3.addItemListener(this);
+		cb3_1.addItemListener(this);
+	}
+	
+	public static void main(String[] args) {
+		if(args.length != 1) {
+			System.out.println("사용법은 나에게");
+			System.exit(1);
+		}
+		new ChatClient(args[0]);
+	}
+	public void valueChanged(ListSelectionEvent e) {
+		if(e.getValueIsAdjusting()) { // 클릭하면
+			JList jl=(JList)e.getSource();
+			if(!jl.isSelectionEmpty()) {
+				coercion = (String)jl.getSelectedValue();
+				System.out.println(coercion+"클릭시 아이디 나오나 리스트?");
+			}
+		}
+	}
+	public void actionPerformed(ActionEvent e) {
+		// 종료버튼 누를 때
+		if(e.getSource() == bt2) {
+			try {
+				pw.println("/quit");
+				pw.flush();
+				br.close();
+				pw.close();
+				sock.close();
+			} catch (Exception e1) {
+				System.out.println("종료");
+				e1.printStackTrace();
+			}
+			System.exit(0);
+		}
+		else if(e.getSource() == bt || e.getSource() == "/r") { // 접속버튼 닉네임을입력 받는다.
+			String id = tf.getText(); // 대화명을 입력받으면 tmp2에 대입
+			if(id.trim().equals("")) {
+				ta.append("아이디를 입력해 주세요" + "\n");
+				System.out.println("아이디를 입력해 주세요");
+				return;
+			}
+			try {
+				sock = new Socket(ip,5000);
+				// 클라이언트에서 일어난 일을 소켓으로 서버에 전달
+				br = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+				// 서버에서 읽은 것은 클라이언트에서 읽음
+				pw = new PrintWriter(new OutputStreamWriter(sock.getOutputStream()));
+			} catch (UnknownHostException ea) {
+				ea.printStackTrace();
+				ta.append("알 수 없는 IP 입니다.");
+				System.out.println("알 수 없는  IP입니다.");
+				return;
+			} catch (IOException ea) {
+				ea.printStackTrace();
+				ta.append("서버 접속 오류가 발생");
+				System.out.println("서버 접속 오류가 발생");
+				this.dispose();
+				return;
+			}
+			
+			pw.println(id.trim()); // 아이디의 앞뒤 공백을 없앤다.
+			pw.flush();
+			
+			ta.append("입장하셨습니다.\n"); // 환영메세지
+			
+			// Thread 클라이언트에 인자값 넘기기
+			ChatClientThread ct = new ChatClientThread(sock,br,ta,listModel,li3,tf2);
+			ct.start(); // 쓰레드 스타트
+		}
+//		else if(e.getSource() == bt3) { // 방장권한 클라스 연결
+//			ChatHostPower chp = new ChatHostPower("방장권한");
+//			Point p2 = this.getLocation();
+//			chp.setLocation(p2.x+50, p2.y+50);
+//			chp.setSize(200,200);
+//			chp.setVisible(true);
+//		}
+		else if(e.getSource() == bt4) { // 강퇴부분 구현하기
+			if(!(coercion == null)) {
+				System.out.println("리스트에서 지워져서:"+coercion);
+				pw.println("/click/" + coercion);
+				pw.flush();
+			}
+		} else {
+			// 메세지 쓴 것
+			msg = tf1.getText();
+			if(msg.trim().equals("")) {
+				return;
+			}
+			String str = null;
+			if(cb3_1.isSelected()) { // 귓속말을 설정하면
+				// 엔터를 눌렀을 때 입력한 글이 창에 띄어짐 -> 한줄씩 쓰는 창 용 엔터
+				str = "/to "+coercion+"";
+			} 
+			else if(cb3.isSelected())
+				str = "";
+			pw.println(str+msg);
+			pw.flush();
+			tf1.setText("");
+		}
+	}
+	public void itemStateChanged(ItemEvent e) {
+		
+	}
+}
