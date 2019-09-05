@@ -189,8 +189,9 @@ public class Server implements Runnable{
 				    	  break;
 				    	  
 				      case "800": // 아이디 변경
-				    	  messageRoom("175|"+getRoomInwon());
 				    	  messageRoom("800|"+nickName);
+				    	  messageRoom("175|"+getRoomInwon());
+				    	  messageTo("170|"+getRoomInwon(msgs[1]));
                           
 				    	  break;
 				    }//서버 switch
