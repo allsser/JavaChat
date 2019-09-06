@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
+<<<<<<< HEAD
 		<item key="selection" value="채팅"/>
+=======
+		<item key="selection" value="radio"/>
+>>>>>>> deec4d93c937ba63b48da6ed36e23c6c40abd074
 		<item key="wrap" value="true"/>
 		<item key="casesensitive" value="false"/>
 		<item key="wholeword" value="false"/>
 		<item key="incremental" value="false"/>
 		<item key="isRegEx" value="false"/>
 		<list key="findhistory">
+<<<<<<< HEAD
 			<item value="채팅"/>
 			<item value="채탕"/>
 			<item value="6789"/>
@@ -23,15 +28,36 @@
 			<item value="Exam04_ChatServer"/>
 			<item value="outputStream"/>
 			<item value="output"/>
+=======
+			<item value="radio"/>
+			<item value="귓속말"/>
+			<item value="li_inwon"/>
+			<item value="radio1"/>
+			<item value="사용법"/>
+			<item value="arl"/>
+			<item value="pw"/>
+			<item value="hashMap"/>
+			<item value="hasMap"/>
+			<item value="ta"/>
+>>>>>>> deec4d93c937ba63b48da6ed36e23c6c40abd074
 		</list>
 		<list key="replacehistory">
+			<item value=""/>
 		</list>
 	</section>
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
+<<<<<<< HEAD
 		<item key="DIALOG_X_ORIGIN" value="593"/>
 		<item key="DIALOG_Y_ORIGIN" value="526"/>
 		<item key="DIALOG_WIDTH" value="340"/>
 		<item key="DIALOG_HEIGHT" value="401"/>
 		<item key="DIALOG_FONT_NAME" value="1|맑은 고딕|9.0|0|WINDOWS|1|-15|0|0|0|400|0|0|0|1|0|0|0|0|맑은 고딕"/>
+=======
+		<item key="DIALOG_X_ORIGIN" value="1096"/>
+		<item key="DIALOG_Y_ORIGIN" value="603"/>
+		<item key="DIALOG_WIDTH" value="288"/>
+		<item key="DIALOG_HEIGHT" value="391"/>
+		<item key="DIALOG_FONT_NAME" value="1|맑은 고딕|9.0|0|WINDOWS|1|-12|0|0|0|400|0|0|0|1|0|0|0|0|맑은 고딕"/>
+>>>>>>> deec4d93c937ba63b48da6ed36e23c6c40abd074
 	</section>
 </section>

@@ -3,6 +3,7 @@ package JavaChatGood;
 import java.awt.Color;
 import java.awt.Rectangle;
 
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 
 import javax.swing.JFrame;
@@ -31,6 +32,7 @@ public class ChatClient extends JFrame{
    JButton bt_change,bt_exit; 
    JRadioButton radio1 = new JRadioButton();
    JRadioButton radio2 = new JRadioButton();
+  
    JPanel p;	
    public ChatClient() {
 	  setTitle("채팅방");
@@ -55,10 +57,15 @@ public class ChatClient extends JFrame{
 	  bt_change.setBounds(400,370,120,30); 
 	  bt_exit.setBounds(400,410,120,30); 
 	  
+	  ButtonGroup group = new ButtonGroup();
+	  group.add(radio1);
+	  group.add(radio2);
+	  
 	  radio1.setText("귓속말");
       radio1.setBounds(new Rectangle(400, 290, 120, 30));
       radio2.setText("귓속말해제");
       radio2.setBounds(new Rectangle(400, 330, 120, 30));
+      
 
 	  p.setLayout(null);
 	  p.setBackground(Color.GRAY);
@@ -68,8 +75,8 @@ public class ChatClient extends JFrame{
 	  p.add(sp_list);
 	  p.add(bt_change);
 	  p.add(bt_exit);
-	  p.add(radio1);
-	  p.add(radio2);
+	  this.p.add(radio1);
+	  this.p.add(radio2);
 
 	  add(p);
 	  setBounds(300,200,550,500);

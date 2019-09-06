@@ -1,4 +1,4 @@
-package JavaChat2;
+package JavaCh+at2;
 
 import java.awt.*;
 import java.awt.List;
