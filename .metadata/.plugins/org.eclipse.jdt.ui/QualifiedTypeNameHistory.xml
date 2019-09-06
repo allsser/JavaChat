@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <qualifiedTypeNameHistroy>
-<fullyQualifiedTypeName name="java.io.FileOutputStream"/>
-<fullyQualifiedTypeName name="java.io.ObjectOutputStream"/>
-<fullyQualifiedTypeName name="javaIO.MyCalss"/>
-<fullyQualifiedTypeName name="java.io.Serializable"/>
-<fullyQualifiedTypeName name="java.text.SimpleDateFormat"/>
-<fullyQualifiedTypeName name="java.util.Date"/>
 <fullyQualifiedTypeName name="javafx.application.Platform"/>
 <fullyQualifiedTypeName name="javafx.scene.control.TextField"/>
 <fullyQualifiedTypeName name="javaNetwork.EchoRunnable"/>
@@ -60,4 +54,10 @@
 <fullyQualifiedTypeName name="java.io.BufferedReader"/>
 <fullyQualifiedTypeName name="java.io.OutputStream"/>
 <fullyQualifiedTypeName name="java.net.Socket"/>
+<fullyQualifiedTypeName name="java.util.Vector"/>
+<fullyQualifiedTypeName name="java.security.Provider.Service"/>
+<fullyQualifiedTypeName name="com.sun.javafx.application.LauncherImpl"/>
+<fullyQualifiedTypeName name="JavaChatGood2.Server.ClientRunnable.Service"/>
+<fullyQualifiedTypeName name="JavaChatGood2.Server.ClientRunnable.Room"/>
+<fullyQualifiedTypeName name="javafx.application.Application"/>
 </qualifiedTypeNameHistroy>

@@ -1,0 +1,398 @@
+package JavaChatGood2;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import com.sun.javafx.application.LauncherImpl;
+
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
+import javafx.stage.Stage;
+
+public class Server extends Application {
+   
+	TextArea textarea;
+	Button startBtn, stopBtn; // 서버 접속, 종료 버튼 
+	ServerSocket server; // 클라이언트의 접속을 받아들이는 넘.
+	ExecutorService executorService = Executors.newCachedThreadPool(); // ThreadPool
+	// singleton형태의 공유객체를 생성
+	SharedObject sharedObject = new SharedObject();
+	
+	
+	// 클라이언트와 연결된 Thread가 사용하는 공유객체를 만들기 위한
+	//클래스 선언
+	// inner class형태로 선언 (사용하기 편함)
+	// 기능을 구현해 놓은 객체를 지칭한다.
+	
+	class SharedObject {
+		// 클라이언트 Thread를 저장하고 있어야 한다.
+		List<ClientRunnable> clients = new ArrayList<ClientRunnable>();
+		
+		// 우리가 필요한 기능은.. Broadcast.
+		// Thread가 클라이언트로부터 데이터를 받아서 모든 클라이언트 Thread
+		// 에게 데이터를 전달하는 기능을 구현
+		// 공유객체의 method는 여러 Thread에 의해서 동시에 사용될 수 있다.
+		// 이런 경우에는 동기화 처리를 해 줘야지 문제없이 출력될 수 있다.
+		public synchronized void broadcast(String msg) {
+			clients.stream().forEach(t->{
+				t.out.println(msg);
+				t.out.flush();
+			});
+		}
+	}
+	
+	// 클라이언트와 매핑되는 Thread를 만들기 위한 Runnable class.
+	class ClientRunnable implements Runnable {
+		private SharedObject sharedObject; // 공유객체
+		private Socket socket; // 클라이언트와 연결된 socket
+		private BufferedReader br;
+		private PrintWriter out;
+		
+		Vector<ClientRunnable> allV;//모든 사용자(대기실사용자 + 대화방사용자)
+		Vector<ClientRunnable> waitV;//대기실 사용자	   
+		Vector<Room> roomV;//개설된 대화방 Room-vs(Vector) : 대화방사용자
+		
+		Room myRoom;//클라이언트가 입장한 대화방	
+		String nickName;
+		
+		public ClientRunnable(SharedObject sharedObject, Socket socket) {
+			super();
+			
+			allV = new Vector<>();
+			waitV = new Vector<>();
+			roomV = new Vector<>();
+			
+			this.sharedObject = sharedObject;
+			this.socket = socket;
+			try {
+				this.br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+				this.out = new PrintWriter(socket.getOutputStream());
+			} catch (Exception e) {
+				System.out.println(e);
+			}
+		}
+		
+		class Room { // 대화방의 정보표현 객체
+			String title; // 방제목
+			int count; // 방 인원수
+			String boss; // 방장(방 개설자)
+			Vector<ClientRunnable> userV; // userV:같은 방에 접속한 Client정보 저장
+			
+			public Room() {
+				userV = new Vector<>();
+			}
+		}
+		
+		public String getRoomInfo(){
+			String str="";
+			for(int i=0; i<roomV.size(); i++){
+				Room r= roomV.get(i);
+				str += r.title+"--"+r.count;
+				if(i<roomV.size()-1)
+					str += ",";
+			}
+			return str;
+		}//getRoomInfo
+		
+		public String getRoomInwon(){//같은방의 인원정보
+			String str="";	
+			for(int i=0; i<myRoom.userV.size(); i++){
+				//"길동,라임,주원"
+				ClientRunnable ser= myRoom.userV.get(i);
+				str += ser.nickName;
+				if(i<myRoom.userV.size()-1)
+					str += ",";
+			}
+			return str;
+		}//getRoomInwon
+
+		public String getRoomInwon(String title){//방제목 클릭시 방의 인원정보
+			String str="";
+			for(int i=0; i<roomV.size(); i++){
+				//"길동,라임,주원"
+				Room room = roomV.get(i);
+				if(room.title.equals(title)){
+					for(int j=0; j<room.userV.size(); j++){
+						ClientRunnable ser= room.userV.get(j);
+						str += ser.nickName;
+						if(j<room.userV.size()-1)
+							str += ",";			   
+					}
+					break;
+				}
+			}
+		return str;
+		}//getRoomInwon 
+
+		public String getWaitInwon(){
+			String str="";
+			for(int i=0; i<waitV.size(); i++){
+				//"길동,라임,주원"
+				ClientRunnable ser= waitV.get(i);
+				str += ser.nickName;
+				if(i<waitV.size()-1)
+					str += ",";
+			}
+			return str;
+		}//getWaitInwon
+
+		public void messageAll(String msg){//전체사용자
+			//접속된 모든 클라이언트(대기실+대화방)에게 메시지 전달	   
+			for(int i=0; i<allV.size(); i++){//벡터 인덱스
+				ClientRunnable service = allV.get(i); //각각의 클라이언트 얻어오기
+				try {
+					service.messageTo(msg);
+				} catch (IOException e) {
+					//에러발생 ---> 클라이언트 접속 끊음!!
+					allV.remove(i--); //접속 끊긴 클라이언트를 벡터에서
+					}
+			}
+		}//messageAll
+
+		public void messageWait(String msg){//대기실 사용자	   
+			for(int i=0; i<waitV.size(); i++){//벡터 인덱스
+				ClientRunnable service = waitV.get(i); //각각의 클라이언트 얻어오기
+				try {
+					service.messageTo(msg);
+				} catch (IOException e) {
+					//에러발생 ---> 클라이언트 접속 끊음!!
+					waitV.remove(i--); //접속 끊긴 클라이언트를 벡터에서 삭제!!
+					System.out.println("클라이언트 접속 끊음!!");
+				}
+			}
+		}//messageWait
+				   
+		public void messageRoom(String msg){//대화방사용자
+			for(int i=0; i< myRoom.userV.size(); i++){//벡터 인덱스
+				ClientRunnable service = myRoom.userV.get(i); //각각의 클라이언트 얻어오기
+				try {
+					service.messageTo(msg);
+				} catch (IOException e) {
+					//에러발생 ---> 클라이언트 접속 끊음!!
+					myRoom.userV.remove(i--); //접속 끊긴 클라이언트를 벡터에서 삭제!!
+					System.out.println("클라이언트 접속 끊음!!");
+				}
+			}
+		}//messageRoom
+			
+		public void messageTo(String msg){
+			//특정 클라이언트에게 메시지 전달 (실제 서버--->클라이언트 메시지 전달)
+			Platform.runLater(()->{
+				textarea.appendText(msg + "\n");
+			});
+		}	
+		@Override
+		public void run() {
+			try {
+				while(true){
+					String msg = br.readLine();//클라이언트의 모든 메시지를 받기
+					
+					if(msg == null) return; //비정상적인 종료
+					if(msg.trim().length() > 0){  
+						System.out.println("from Client: "+ msg +":"+socket.getInetAddress().getHostAddress());
+						//서버에서 상황을 모니터!!
+						String msgs[]=msg.split("\\|");
+						String protocol = msgs[0]; 
+						System.out.println(protocol);
+						
+						switch(protocol){
+						case "100": //대기실 접속
+							allV.add(this);//전체사용자에 등록
+							waitV.add(this);//대기실사용자에 등록  
+							break;
+							
+						case "150": //대화명 입력
+							nickName=msgs[1]; 
+							
+							//최초 대화명 입력했을때 대기실의 정보를 출력
+							messageWait("160|"+ getRoomInfo());
+							messageWait("180|"+ getWaitInwon());
+							break;
+							
+						case "160": //방만들기 (대화방 입장)
+							myRoom = new Room();
+							myRoom.title =msgs[1];//방제목
+							myRoom.count = 1;
+							myRoom.boss = nickName;
+							roomV.add(myRoom);
+							
+							//대기실----> 대화방 이동!!
+							waitV.remove(this);
+							myRoom.userV.add(this);
+							messageRoom("200|"+nickName);//방인원에게 입장 알림
+							
+							//대기실 사용자들에게 방정보를 출력
+							//예) 대화방명:JavaLove
+							//-----> roomInfo(JList) :  JavaLove--1		    	          
+							messageWait("160|"+ getRoomInfo());
+							messageWait("180|"+ getWaitInwon());
+							break;
+							
+						case "170": //(대기실에서) 대화방 인원정보
+							messageTo("170|"+getRoomInwon(msgs[1]));
+							break;
+							
+						case "175": //(대화방에서) 대화방 인원정보
+							messageRoom("175|"+getRoomInwon());
+							break;
+							
+						case "200": //방들어가기 (대화방 입장) ----> msgs[] = {"200","자바방"}
+							for(int i=0; i<roomV.size(); i++){//방이름 찾기!!
+								Room r = roomV.get(i);
+								if(r.title.equals(msgs[1])){//일치하는 방 찾음!!		    	        	
+									myRoom = r;
+									myRoom.count++;//인원수 1증가
+									break;
+								}
+							}//for         
+							
+							//대기실----> 대화방 이동!!
+							waitV.remove(this);
+							myRoom.userV.add(this);	
+							
+							messageRoom("200|"+nickName);//방인원에게 입장 알림  
+							
+							//들어갈 방의 title전달
+							messageTo("202|"+ myRoom.title);
+							messageWait("160|"+ getRoomInfo());
+							messageWait("180|"+ getWaitInwon());
+							break;
+							
+						case "300": //메시지		    	        
+							messageRoom("300|["+nickName +"]▶ "+msgs[1]);		    	         
+							//클라이언트에게 메시지 보내기
+							break;
+							
+						case "400": //대화방 퇴장
+							myRoom.count--;//인원수 감소
+							messageRoom("400|"+nickName);//방인원들에게 퇴장 알림!!
+							
+							//대화방----> 대기실 이동!!
+							myRoom.userV.remove(this);	
+							waitV.add(this);
+							
+							//대화방 퇴장후 방인원 다시출력
+							messageRoom("175|"+getRoomInwon());
+							
+							//대기실에 방정보 다시출력
+							messageWait("160|"+ getRoomInfo());
+							break;
+							
+						case "500": // 귓속말
+							messageRoom("400|["+nickName +"]▶ "+msgs[1]);
+							String name = msg.substring(2, msg.indexOf('-')).trim();
+							messageWait("180|"+ getWaitInwon());
+							if(name.equals(getWaitInwon())) {
+								messageRoom(("500|["+nickName +"]▶ >(secret)" +msgs[1]));
+							}
+							
+							break;
+							
+						case "800": // 아이디 변경
+							messageRoom("175|"+getRoomInwon());
+							messageRoom("800|"+nickName);
+							
+							break;
+						}//서버 switch
+					}//if
+				}//while
+			}catch (IOException e) {
+				System.out.println("★");
+				e.printStackTrace();
+			}
+		}//run
+	}
+	
+	@Override
+	public void start(Stage primaryStage) throws Exception {
+		// 화면구성해서 window 띄우는 코드
+		// 화면기본 layout을 설정 => 화면을 동서남북중앙(5개의 영역)으로 분리
+		BorderPane root = new BorderPane();
+		// BorderPane의 크기를 설정 => 화면에 띄우는 window의 크기 설정
+		root.setPrefSize(700, 500);
+		
+		// Component생성해서 BorderPane에 부착
+		textarea = new TextArea();
+		root.setCenter(textarea);
+		
+		startBtn = new Button("채팅 서버 접속"); 
+		startBtn.setPrefSize(250, 50);
+		startBtn.setOnAction(t->{
+			// 버튼에서 Action이 발생(클릭)했을 떄 호출!
+			textarea.clear();
+			messageTo("[채팅서버기동 - 7777]");
+			// 서버소켓을 만들어서 클라이언트 접속을 기다려야 한
+			// JavaFX thread가 blocking되지 않도록 새로운 Thread를 
+			// 만들어서 클라이언트 접속을 기다려야 한다.
+			Runnable runnable = new Runnable() {
+				public void run(){
+					try {
+						server = new ServerSocket(7777);
+						//현재 실행중인 ip + 명시된 port ----> 소켓서비스   
+						while(true){
+							messageTo("Start Server.......");
+							Socket socket = server.accept();//클라이언트 접속 대기
+							messageTo("[클라이언트 접속 성공!!]");
+							// 클라이언트가 접속 했으니 Thread를 하나 생성하고
+							// 실행해야 한다.
+							ClientRunnable cRunnable = 
+									new ClientRunnable(sharedObject, socket);
+							// 새로운 클라이언트가 접속되었으니
+							// 공용객체의 List안에 들어가야겠죠?
+							
+							sharedObject.clients.add(cRunnable);
+							messageTo("[현재 클라이언트 수 : " + sharedObject.clients.size() + "]");
+							executorService.execute(cRunnable);
+						}
+					}catch (Exception e) {
+						System.out.println(e);
+					}
+				}
+			};
+			executorService.execute(runnable);
+		});
+		
+		stopBtn = new Button("채팅 서버 종료");
+		stopBtn.setPrefSize(250, 50);
+		stopBtn.setOnAction(t->{
+			
+		});
+		
+		FlowPane flowpane = new FlowPane(); // 긴 판넬이라 보면 된다.
+		flowpane.setPrefSize(700, 50);
+		// flowpane에 버튼을 올려요.
+		flowpane.getChildren().add(startBtn);
+		flowpane.getChildren().add(stopBtn);
+		root.setBottom(flowpane); // 밑에 판넬을 붙인다.
+		
+		// Scene객체가 필요.
+		Scene scene = new Scene(root);
+		primaryStage.setScene(scene);
+		primaryStage.setTitle("방 1개짜리 채팅입니다.!!");
+		primaryStage.show();	
+	}
+	private void messageTo(String string) {
+		// TODO Auto-generated method stub
+		
+	}
+	public void main(String[] args) {
+		launch();
+	}
+}
+
+
